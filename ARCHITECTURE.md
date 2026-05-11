@@ -1,25 +1,36 @@
 # ARCHITECTURE - signal-persona-terminal
 
-The Signal contract between `persona-harness` and terminal transport.
-It relates one harness-owned terminal session to the backend that owns PTY
-bytes and disposable viewers. The whole channel is one `signal_channel!`
-invocation in `src/lib.rs`.
+Signal contract for Persona terminal transport control.
 
-`persona-terminal` is the transport owner. It consumes `terminal-cell` as the
-low-level one-cell PTY/transcript primitive.
+`persona-terminal` is the transport owner. This crate defines the closed
+control-plane records that other Persona components use to ask the transport
+owner for terminal work. The raw attached-viewer byte plane is intentionally
+outside this contract: PTY bytes, socket bytes, and viewer pump bytes stay in
+`terminal-cell` / `persona-terminal` implementation code and are not wrapped in
+Signal frames.
+
+The whole channel is one `signal_channel!` invocation in `src/lib.rs`.
 
 ## Channel
 
 | Side | Component |
 |---|---|
-| Request side | `persona-harness` |
+| Request side | `persona-harness`, `terminal-cell` integration callers |
 | Event side | `persona-terminal` |
 
-The harness requests connection, input, resize, detachment, and capture
-vectors. The terminal transport emits readiness, input acceptance, transcript, resize,
-detachment, capture, exit, and rejection events. The steady-state flow is
-transport to harness:
-transcript deltas and lifecycle events are pushed; the harness does not poll.
+There are two control surfaces:
+
+- Harness transport: `persona-harness` requests connection, input, resize,
+  detachment, and capture vectors. `persona-terminal` emits readiness, input
+  acceptance, transcript, resize, detachment, capture, exit, and rejection
+  events.
+- Terminal-cell control: `persona-terminal` uses terminal-cell prompt patterns,
+  input gates, write injection acknowledgements, and worker lifecycle
+  observations to make controlled injection testable without making raw bytes
+  into Signal messages.
+
+The steady-state flow is pushed by the transport owner. Harnesses and callers do
+not poll for transcript or lifecycle state.
 
 ## Record Source
 
@@ -32,6 +43,36 @@ Records local to this contract:
 - `TerminalTranscriptBytes`
 - `TerminalRows`
 - `TerminalColumns`
+- `TerminalByteCount`
+- `PromptPatternId`
+- `PromptPatternBytes`
+- `PromptPattern`
+- `RegisterPromptPattern`
+- `UnregisterPromptPattern`
+- `ListPromptPatterns`
+- `PromptPatternEntry`
+- `PromptPatternRegistered`
+- `PromptPatternUnregistered`
+- `PromptPatternList`
+- `InputGateReason`
+- `InputGateLeaseId`
+- `InputGateLease`
+- `PromptState`
+- `AcquireInputGate`
+- `ReleaseInputGate`
+- `WriteInjection`
+- `GateAcquired`
+- `GateBusy`
+- `GateReleased`
+- `InjectionAck`
+- `InjectionRejected`
+- `InjectionRejectionReason`
+- `SubscribeTerminalWorkerLifecycle`
+- `TerminalWorkerKind`
+- `TerminalWorkerStopReason`
+- `TerminalWorkerLifecycle`
+- `TerminalWorkerLifecycleSnapshot`
+- `TerminalWorkerLifecycleEvent`
 - `TerminalConnection`
 - `TerminalInput`
 - `TerminalResize`
@@ -46,7 +87,8 @@ Records local to this contract:
 - `TerminalExited`
 - `TerminalRejected`
 
-The records are terminal-transport vocabulary, not router or message records.
+The records are terminal-transport vocabulary. They are not router, message,
+auth, or terminal raw-data records.
 
 ## Messages
 
@@ -56,13 +98,35 @@ TerminalRequest                 TerminalEvent
 ├─ TerminalInput                ├─ TerminalInputAccepted
 ├─ TerminalResize               ├─ TerminalResized
 ├─ TerminalDetachment           ├─ TerminalCaptured
-└─ TerminalCapture              ├─ TranscriptDelta
-                                ├─ TerminalDetached
-                                ├─ TerminalExited
-                                └─ TerminalRejected
+├─ TerminalCapture              ├─ TranscriptDelta
+├─ RegisterPromptPattern        ├─ TerminalDetached
+├─ UnregisterPromptPattern      ├─ TerminalExited
+├─ ListPromptPatterns           ├─ TerminalRejected
+├─ AcquireInputGate             ├─ PromptPatternRegistered
+├─ ReleaseInputGate             ├─ PromptPatternUnregistered
+├─ WriteInjection               ├─ PromptPatternList
+└─ SubscribeTerminalWorker...   ├─ GateAcquired
+                                ├─ GateBusy
+                                ├─ GateReleased
+                                ├─ InjectionAck
+                                ├─ InjectionRejected
+                                ├─ TerminalWorkerLifecycleSnapshot
+                                └─ TerminalWorkerLifecycleEvent
 ```
 
 Closed enums; typed rejection reasons; no string-tagged event kinds.
+
+## Terminal-Cell Control
+
+Prompt pattern records let a caller register the terminal-ready shape that makes
+write injection safe to attempt. Input gate records make the exclusive write
+lease explicit and include prompt state in the acquisition reply. Write
+injection records acknowledge the terminal generation and sequence produced by a
+successful write. Worker lifecycle records expose terminal-cell task start/stop
+observations as typed events.
+
+This contract does not decide whether a write should happen. It only carries the
+transport control facts needed by `persona-terminal` and its consumers.
 
 ## Versioning
 
@@ -95,6 +159,20 @@ TerminalEvent::TranscriptDelta(TranscriptDelta {
     sequence: TerminalSequence::new(7),
     bytes: TerminalTranscriptBytes::new(b"hello\r\n".to_vec()),
 })
+
+;; caller -> terminal: acquire exclusive write access after prompt check
+TerminalRequest::AcquireInputGate(AcquireInputGate {
+    terminal: TerminalName::new("operator"),
+    reason: InputGateReason::new("send router-delivered command"),
+    prompt_pattern_id: Some(PromptPatternId::new("shell-ready")),
+})
+
+;; terminal -> caller: gate acquired and prompt was clean
+TerminalEvent::GateAcquired(GateAcquired {
+    terminal: TerminalName::new("operator"),
+    lease: InputGateLease::new(42),
+    prompt_state: PromptState::Clean,
+})
 ```
 
 ## Round Trips
@@ -109,6 +187,10 @@ witnesses.
 - No harness actor. That is `persona-harness`.
 - No router delivery policy. That is `persona-router`.
 - No OS focus policy. That is `persona-system`.
+- No terminal-cell daemon. That is `terminal-cell`.
+- No prompt interpretation or delivery policy. That belongs in the caller and
+  transport owner, not this contract.
+- No raw PTY/viewer byte data plane.
 - No transport loop, reconnect policy, or socket path.
 
 ## Code Map
@@ -125,5 +207,7 @@ tests/
 - `persona-harness/ARCHITECTURE.md`
 - `persona-terminal/ARCHITECTURE.md`
 - `persona-router/ARCHITECTURE.md`
-- `~/primary/reports/designer/97-persona-system-vision-and-architecture-development.md`
+- `terminal-cell/ARCHITECTURE.md`
+- `~/primary/reports/designer/127-decisions-resolved-2026-05-11.md`
+- `~/primary/reports/designer-assistant/18-current-persona-handoff-after-editorial-pass.md`
 - `signal-core/src/channel.rs`

@@ -13,7 +13,7 @@ Before changing code in this repo, read:
 - `~/primary/skills/nix-discipline.md`
 - this repo's `ARCHITECTURE.md`
 - the consumers' `ARCHITECTURE.md` files
-  (`persona-harness/`, `persona-terminal/`)
+  (`persona-harness/`, `persona-terminal/`, `terminal-cell/`)
 
 ## What this repo owns
 
@@ -21,6 +21,10 @@ Before changing code in this repo, read:
 - The closed `TerminalEvent` enum.
 - Typed terminal identity, generation, sequence, size, input bytes,
   transcript bytes, capture, and rejection reason records.
+- Prompt pattern registration records used to identify terminal-ready shapes.
+- Input gate lease records used to serialize controlled terminal writes.
+- Write injection acknowledgement and rejection records.
+- Worker lifecycle subscription and observation records.
 - The `Frame` type alias.
 - Wire-form round-trip tests.
 
@@ -29,5 +33,8 @@ Before changing code in this repo, read:
 - PTY lifecycle.
 - Viewer lifecycle.
 - Harness lifecycle.
+- Terminal-cell implementation.
+- Raw PTY, socket, or viewer byte streams.
+- Prompt interpretation, routing authority, or policy decisions.
 - Router delivery policy.
 - Socket paths, reconnects, or process supervision.
