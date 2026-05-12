@@ -1,3 +1,4 @@
+use nota_codec::{Decoder, Encoder, NotaDecode, NotaEncode};
 use signal_core::{FrameBody, Reply, Request, SemaVerb};
 use signal_persona_terminal::{
     AcquireInputGate, Frame, GateAcquired, GateBusy, GateReleased, InjectionAck, InjectionRejected,
@@ -50,6 +51,20 @@ fn round_trip_event(event: TerminalEvent) -> TerminalEvent {
         FrameBody::Reply(Reply::Operation(event)) => event,
         other => panic!("expected reply operation, got {other:?}"),
     }
+}
+
+fn round_trip_nota<T>(value: T, expected: &str)
+where
+    T: NotaEncode + NotaDecode + PartialEq + std::fmt::Debug,
+{
+    let mut encoder = Encoder::new();
+    value.encode(&mut encoder).expect("encode nota text");
+    let encoded = encoder.into_string();
+    assert_eq!(encoded, expected);
+
+    let mut decoder = Decoder::new(&encoded);
+    let recovered = T::decode(&mut decoder).expect("decode nota text");
+    assert_eq!(recovered, value);
 }
 
 #[test]
@@ -131,6 +146,17 @@ fn prompt_pattern_requests_round_trip() {
 }
 
 #[test]
+fn prompt_pattern_registration_request_round_trips_through_nota_text() {
+    round_trip_nota(
+        TerminalRequest::RegisterPromptPattern(RegisterPromptPattern {
+            terminal: terminal(),
+            pattern: PromptPattern::LiteralSuffix(PromptPatternBytes::new(b"> ".to_vec())),
+        }),
+        "(RegisterPromptPattern operator (LiteralSuffix [62 32]))",
+    );
+}
+
+#[test]
 fn input_gate_requests_round_trip() {
     let acquire = TerminalRequest::AcquireInputGate(AcquireInputGate {
         terminal: terminal(),
@@ -154,6 +180,18 @@ fn input_gate_requests_round_trip() {
         lease: input_gate_lease(),
     });
     assert_eq!(round_trip_request(release.clone()), release);
+}
+
+#[test]
+fn acquire_input_gate_request_round_trips_through_nota_text() {
+    round_trip_nota(
+        TerminalRequest::AcquireInputGate(AcquireInputGate {
+            terminal: terminal(),
+            reason: InputGateReason::new("message delivery"),
+            prompt_pattern_id: Some(prompt_pattern_id()),
+        }),
+        "(AcquireInputGate operator \"message delivery\" codex-ready)",
+    );
 }
 
 #[test]
@@ -320,6 +358,18 @@ fn input_gate_events_round_trip() {
 }
 
 #[test]
+fn gate_acquired_event_round_trips_through_nota_text() {
+    round_trip_nota(
+        TerminalEvent::GateAcquired(GateAcquired {
+            terminal: terminal(),
+            lease: input_gate_lease(),
+            prompt_state: PromptState::Clean,
+        }),
+        "(GateAcquired operator (InputGateLease 42) (Clean))",
+    );
+}
+
+#[test]
 fn injection_events_round_trip() {
     let ack = TerminalEvent::InjectionAck(InjectionAck {
         terminal: terminal(),
@@ -369,6 +419,23 @@ fn worker_lifecycle_events_round_trip() {
         observation: observations[0].clone(),
     });
     assert_eq!(round_trip_event(event.clone()), event);
+}
+
+#[test]
+fn worker_lifecycle_snapshot_round_trips_through_nota_text() {
+    round_trip_nota(
+        TerminalEvent::TerminalWorkerLifecycleSnapshot(TerminalWorkerLifecycleSnapshot {
+            terminal: terminal(),
+            observations: vec![
+                TerminalWorkerLifecycle::Started(TerminalWorkerKind::InputWriter),
+                TerminalWorkerLifecycle::Stopped {
+                    worker: TerminalWorkerKind::OutputReader,
+                    reason: TerminalWorkerStopReason::OutputReaderFinished,
+                },
+            ],
+        }),
+        "(TerminalWorkerLifecycleSnapshot operator [(Started InputWriter) (Stopped OutputReader (OutputReaderFinished))])",
+    );
 }
 
 #[test]
