@@ -15,7 +15,7 @@ The whole channel is one `signal_channel!` invocation in `src/lib.rs`.
 
 | Side | Component |
 |---|---|
-| Request side | `persona-harness`, `terminal-cell` integration callers |
+| Request side | Persona components that need terminal transport, currently `persona-harness` and router delivery adapters |
 | Event side | `persona-terminal` |
 
 There are two control surfaces:
@@ -24,10 +24,10 @@ There are two control surfaces:
   detachment, and capture vectors. `persona-terminal` emits readiness, input
   acceptance, transcript, resize, detachment, capture, exit, and rejection
   events.
-- Terminal-cell control: `persona-terminal` uses terminal-cell prompt patterns,
-  input gates, write injection acknowledgements, and worker lifecycle
-  observations to make controlled injection testable without making raw bytes
-  into Signal messages.
+- Terminal control: `persona-terminal` owns prompt-pattern registry, input gate
+  leases, write injection acknowledgements, and worker lifecycle observations.
+  It may implement those facts on top of `terminal-cell` primitives, but
+  `terminal-cell` is not the Persona-facing contract endpoint.
 
 The steady-state flow is pushed by the transport owner. Harnesses and callers do
 not poll for transcript or lifecycle state.
@@ -122,7 +122,7 @@ Prompt pattern records let a caller register the terminal-ready shape that makes
 write injection safe to attempt. Input gate records make the exclusive write
 lease explicit and include prompt state in the acquisition reply. Write
 injection records acknowledge the terminal generation and sequence produced by a
-successful write. Worker lifecycle records expose terminal-cell task start/stop
+successful write. Worker lifecycle records expose transport task start/stop
 observations as typed events.
 
 This contract does not decide whether a write should happen. It only carries the
@@ -187,7 +187,7 @@ witnesses.
 - No harness actor. That is `persona-harness`.
 - No router delivery policy. That is `persona-router`.
 - No OS focus policy. That is `persona-system`.
-- No terminal-cell daemon. That is `terminal-cell`.
+- No terminal-cell daemon. That is `terminal-cell`, behind `persona-terminal`.
 - No prompt interpretation or delivery policy. That belongs in the caller and
   transport owner, not this contract.
 - No raw PTY/viewer byte data plane.

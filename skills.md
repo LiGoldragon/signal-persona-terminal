@@ -38,3 +38,6 @@ Before changing code in this repo, read:
 - Prompt interpretation, routing authority, or policy decisions.
 - Router delivery policy.
 - Socket paths, reconnects, or process supervision.
+
+`terminal-cell` is the low-level PTY primitive behind `persona-terminal`; do
+not describe it as an independent production Signal endpoint.

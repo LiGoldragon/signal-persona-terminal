@@ -2,9 +2,10 @@
 //!
 //! Read this file as the public interface of the terminal control plane. The
 //! harness requests terminal connection, input, resize, detachment, and
-//! capture. Persona-terminal also uses this vocabulary to drive terminal-cell's
-//! control plane: prompt-pattern registration, input-gate leases, programmatic
-//! injection, and worker lifecycle observation.
+//! capture. Persona-terminal owns prompt-pattern registration, input-gate
+//! leases, programmatic injection, and worker lifecycle observation at the
+//! Persona boundary, even when it implements those facts with terminal-cell
+//! primitives underneath.
 //!
 //! Raw attached-viewer bytes are not Signal frames. They stay on the
 //! terminal-cell data plane.

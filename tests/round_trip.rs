@@ -413,3 +413,13 @@ fn from_impl_lifts_injection_ack_into_event() {
     let event: TerminalEvent = payload.clone().into();
     assert_eq!(event, TerminalEvent::InjectionAck(payload));
 }
+
+#[test]
+fn terminal_contract_names_persona_terminal_as_the_production_endpoint() {
+    let source = include_str!("../src/lib.rs");
+
+    assert!(source.contains("Persona-terminal owns prompt-pattern registration"));
+    assert!(source.contains("terminal-cell"));
+    assert!(!source.contains("terminal-cell's control plane"));
+    assert!(!source.contains("terminal-cell integration callers"));
+}

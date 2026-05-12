@@ -2,9 +2,11 @@
 
 Signal contract for Persona terminal transport control.
 
-This crate owns the typed request/event vocabulary used by `persona-harness`,
-`terminal-cell` integration callers, and the `persona-terminal` transport
-owner.
+This crate owns the typed request/event vocabulary used by Persona components
+that need terminal transport and by the `persona-terminal` transport owner.
+`persona-terminal` is the Persona-facing endpoint. `terminal-cell` remains the
+low-level PTY primitive behind that owner; it is not a separate production
+Signal endpoint.
 
 It carries control records for terminal connection, input, resize, capture,
 prompt pattern registration, input gate leases, write injection acknowledgements,
