@@ -110,11 +110,57 @@ TerminalRequest                 TerminalEvent
                                 ├─ GateReleased
                                 ├─ InjectionAck
                                 ├─ InjectionRejected
+                                ├─ TerminalRequestUnimplemented
                                 ├─ TerminalWorkerLifecycleSnapshot
                                 └─ TerminalWorkerLifecycleEvent
 ```
 
 Closed enums; typed rejection reasons; no string-tagged event kinds.
+
+### Skeleton honesty (Unimplemented event)
+
+Per
+`~/primary/reports/designer/143-prototype-readiness-gap-audit.md` §4.3:
+
+```text
+TerminalUnimplementedReason
+  | NotInPrototypeScope
+  | DependencyMissing(DependencyKind)
+  | ResourceUnavailable(ResourceKind)
+
+TerminalRequestUnimplemented
+  | terminal:    TerminalName
+  | operation:   TerminalOperationKind          (closed enum mirroring TerminalRequest variants)
+  | reason:      TerminalUnimplementedReason
+```
+
+When a `TerminalRequest` variant has no built behavior yet, `persona-terminal`
+emits `TerminalRequestUnimplemented` rather than panicking or producing a
+generic rejection.
+
+### Injection ordering
+
+Per
+`~/primary/reports/designer/143-prototype-readiness-gap-audit.md` §3 (Agent C
+terminal §7): `WriteInjection` carries an `injection_sequence: u64` so the
+gate-lease holder's writes are sequenced. Out-of-order use returns
+`InjectionRejectionReason::InvalidSequence`.
+
+```text
+WriteInjection
+  | terminal:          TerminalName
+  | lease:             InputGateLease
+  | injection_sequence: u64
+  | bytes:             TerminalInputBytes
+```
+
+### `TerminalName` namespace scope
+
+`TerminalName` identifies a supervised terminal session. For the prototype,
+the canonical scope is "one role per name" — `TerminalName::new("operator")`,
+`TerminalName::new("designer")`, etc. Future cases where multiple harnesses
+share a role get a richer namespace; until then, the name space matches the
+role-name vocabulary in `signal-persona-mind::RoleName`.
 
 ## Terminal-Cell Control
 
