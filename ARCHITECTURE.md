@@ -163,9 +163,6 @@ unregister, and release requests use `Retract`.
 
 ### Skeleton honesty (Unimplemented event)
 
-Per
-`~/primary/reports/designer/143-prototype-readiness-gap-audit.md` §4.3:
-
 ```text
 TerminalUnimplementedReason
   | NotInPrototypeScope
@@ -184,9 +181,7 @@ generic rejection.
 
 ### Injection ordering
 
-Per
-`~/primary/reports/designer/143-prototype-readiness-gap-audit.md` §3 (Agent C
-terminal §7): `WriteInjection` carries an `injection_sequence: u64` so the
+`WriteInjection` carries an `injection_sequence: u64` so the
 gate-lease holder's writes are sequenced. Out-of-order use returns
 `InjectionRejectionReason::InvalidSequence`.
 
@@ -324,6 +319,4 @@ tests/
 - `persona-terminal/ARCHITECTURE.md`
 - `persona-router/ARCHITECTURE.md`
 - `terminal-cell/ARCHITECTURE.md`
-- `~/primary/reports/designer/127-decisions-resolved-2026-05-11.md`
-- `~/primary/reports/designer-assistant/18-current-persona-handoff-after-editorial-pass.md`
 - `signal-core/src/channel.rs`
