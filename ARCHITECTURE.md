@@ -136,10 +136,10 @@ Closed enums; typed rejection reasons; no string-tagged event kinds.
 
 ### Signal root verbs
 
-Every `TerminalRequest` variant declares its root verb through
-`TerminalRequest::signal_verb()`. The method currently returns
-`signal_core::SemaVerb`; this crate keeps that spelling until the
-coordinated `signal-core` `SignalVerb` rename lands.
+Every `TerminalRequest` variant declares its root verb in the
+`signal_channel!` declaration. `signal-core` generates
+`TerminalRequest::signal_verb()` and
+`TerminalRequest::into_signal_request()` from that declaration.
 
 ```text
 TerminalConnection                 -> Assert

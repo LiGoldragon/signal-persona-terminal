@@ -1,5 +1,5 @@
 use nota_codec::{Decoder, Encoder, NotaDecode, NotaEncode};
-use signal_core::{FrameBody, Reply, Request, SemaVerb};
+use signal_core::{FrameBody, Reply, Request, SignalVerb};
 use signal_persona_terminal::{
     AcquireInputGate, Frame, GateAcquired, GateBusy, GateReleased, InjectionAck, InjectionRejected,
     InjectionRejectionReason, InputGateLease, InputGateLeaseId, InputGateReason,
@@ -32,10 +32,7 @@ fn input_gate_lease() -> InputGateLease {
 
 fn round_trip_request(request: TerminalRequest) -> TerminalRequest {
     let expected_verb = request.signal_verb();
-    let frame = Frame::new(FrameBody::Request(Request::operation(
-        expected_verb,
-        request.clone(),
-    )));
+    let frame = Frame::new(FrameBody::Request(request.into_signal_request()));
     let bytes = frame.encode_length_prefixed().expect("encode");
     let decoded = Frame::decode_length_prefixed(&bytes).expect("decode");
     match decoded.into_body() {
@@ -314,14 +311,14 @@ fn terminal_request_variants_declare_expected_signal_root_verbs() {
             TerminalRequest::TerminalConnection(TerminalConnection {
                 terminal: terminal(),
             }),
-            SemaVerb::Assert,
+            SignalVerb::Assert,
         ),
         (
             TerminalRequest::TerminalInput(TerminalInput {
                 terminal: terminal(),
                 bytes: TerminalInputBytes::new(b"hello\r".to_vec()),
             }),
-            SemaVerb::Assert,
+            SignalVerb::Assert,
         ),
         (
             TerminalRequest::TerminalResize(TerminalResize {
@@ -329,40 +326,40 @@ fn terminal_request_variants_declare_expected_signal_root_verbs() {
                 rows: TerminalRows::new(32),
                 columns: TerminalColumns::new(120),
             }),
-            SemaVerb::Mutate,
+            SignalVerb::Mutate,
         ),
         (
             TerminalRequest::TerminalDetachment(TerminalDetachment {
                 terminal: terminal(),
                 reason: TerminalDetachmentReason::HumanRequested,
             }),
-            SemaVerb::Retract,
+            SignalVerb::Retract,
         ),
         (
             TerminalRequest::TerminalCapture(TerminalCapture {
                 terminal: terminal(),
             }),
-            SemaVerb::Match,
+            SignalVerb::Match,
         ),
         (
             TerminalRequest::RegisterPromptPattern(RegisterPromptPattern {
                 terminal: terminal(),
                 pattern: PromptPattern::LiteralSuffix(PromptPatternBytes::new(b"> ".to_vec())),
             }),
-            SemaVerb::Assert,
+            SignalVerb::Assert,
         ),
         (
             TerminalRequest::UnregisterPromptPattern(UnregisterPromptPattern {
                 terminal: terminal(),
                 pattern_id: prompt_pattern_id(),
             }),
-            SemaVerb::Retract,
+            SignalVerb::Retract,
         ),
         (
             TerminalRequest::ListPromptPatterns(ListPromptPatterns {
                 terminal: terminal(),
             }),
-            SemaVerb::Match,
+            SignalVerb::Match,
         ),
         (
             TerminalRequest::AcquireInputGate(AcquireInputGate {
@@ -370,14 +367,14 @@ fn terminal_request_variants_declare_expected_signal_root_verbs() {
                 reason: InputGateReason::new("message delivery"),
                 prompt_pattern_id: Some(prompt_pattern_id()),
             }),
-            SemaVerb::Assert,
+            SignalVerb::Assert,
         ),
         (
             TerminalRequest::ReleaseInputGate(ReleaseInputGate {
                 terminal: terminal(),
                 lease: input_gate_lease(),
             }),
-            SemaVerb::Retract,
+            SignalVerb::Retract,
         ),
         (
             TerminalRequest::WriteInjection(WriteInjection {
@@ -385,13 +382,13 @@ fn terminal_request_variants_declare_expected_signal_root_verbs() {
                 lease: input_gate_lease(),
                 bytes: TerminalInputBytes::new(b"hello\r".to_vec()),
             }),
-            SemaVerb::Assert,
+            SignalVerb::Assert,
         ),
         (
             TerminalRequest::SubscribeTerminalWorkerLifecycle(SubscribeTerminalWorkerLifecycle {
                 terminal: terminal(),
             }),
-            SemaVerb::Subscribe,
+            SignalVerb::Subscribe,
         ),
     ];
 
