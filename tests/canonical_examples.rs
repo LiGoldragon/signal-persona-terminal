@@ -13,8 +13,8 @@ use signal_persona_terminal::{
     ReleaseInputGate, SubscribeTerminalWorkerLifecycle, SubscriptionRetracted, TerminalCapture,
     TerminalColumns, TerminalConnection, TerminalDetachment, TerminalDetachmentReason,
     TerminalGeneration, TerminalInput, TerminalInputAccepted, TerminalInputBytes, TerminalName,
-    TerminalReady, TerminalReply, TerminalRequest, TerminalResize, TerminalRows,
-    TerminalSequence, TerminalWorkerLifecycleToken, WriteInjection,
+    TerminalReady, TerminalReply, TerminalRequest, TerminalResize, TerminalRows, TerminalSequence,
+    TerminalWorkerLifecycleToken, WriteInjection,
 };
 
 const CANONICAL: &str = include_str!("../examples/canonical.nota");
@@ -24,11 +24,15 @@ fn operator() -> TerminalName {
 }
 
 fn token() -> TerminalWorkerLifecycleToken {
-    TerminalWorkerLifecycleToken { terminal: operator() }
+    TerminalWorkerLifecycleToken {
+        terminal: operator(),
+    }
 }
 
 fn lease() -> InputGateLease {
-    InputGateLease { id: InputGateLeaseId::new(42) }
+    InputGateLease {
+        id: InputGateLeaseId::new(42),
+    }
 }
 
 fn hello_bytes() -> TerminalInputBytes {
@@ -57,7 +61,9 @@ where
 #[test]
 fn canonical_request_examples_round_trip() {
     round_trip(
-        TerminalRequest::TerminalConnection(TerminalConnection { terminal: operator() }),
+        TerminalRequest::TerminalConnection(TerminalConnection {
+            terminal: operator(),
+        }),
         "(TerminalConnection operator)",
     );
     round_trip(
@@ -83,7 +89,9 @@ fn canonical_request_examples_round_trip() {
         "(TerminalDetachment operator HumanRequested)",
     );
     round_trip(
-        TerminalRequest::TerminalCapture(TerminalCapture { terminal: operator() }),
+        TerminalRequest::TerminalCapture(TerminalCapture {
+            terminal: operator(),
+        }),
         "(TerminalCapture operator)",
     );
     round_trip(
