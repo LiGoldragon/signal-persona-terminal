@@ -192,124 +192,12 @@ impl TerminalByteCount {
     }
 }
 
-#[derive(
-    Archive, RkyvSerialize, RkyvDeserialize, NotaTransparent, Debug, Clone, PartialEq, Eq, Hash,
-)]
-pub struct TerminalCommandExecutable(String);
-
-impl TerminalCommandExecutable {
-    pub fn new(value: impl Into<String>) -> Self {
-        Self(value.into())
-    }
-
-    pub fn as_str(&self) -> &str {
-        &self.0
-    }
-}
-
-#[derive(
-    Archive, RkyvSerialize, RkyvDeserialize, NotaTransparent, Debug, Clone, PartialEq, Eq, Hash,
-)]
-pub struct TerminalCommandArgument(String);
-
-impl TerminalCommandArgument {
-    pub fn new(value: impl Into<String>) -> Self {
-        Self(value.into())
-    }
-
-    pub fn as_str(&self) -> &str {
-        &self.0
-    }
-}
-
-#[derive(Archive, RkyvSerialize, RkyvDeserialize, NotaRecord, Debug, Clone, PartialEq, Eq)]
-pub struct TerminalCommand {
-    pub executable: TerminalCommandExecutable,
-    pub arguments: Vec<TerminalCommandArgument>,
-}
-
-#[derive(
-    Archive, RkyvSerialize, RkyvDeserialize, NotaTransparent, Debug, Clone, PartialEq, Eq, Hash,
-)]
-pub struct TerminalEnvironmentName(String);
-
-impl TerminalEnvironmentName {
-    pub fn new(value: impl Into<String>) -> Self {
-        Self(value.into())
-    }
-
-    pub fn as_str(&self) -> &str {
-        &self.0
-    }
-}
-
-#[derive(
-    Archive, RkyvSerialize, RkyvDeserialize, NotaTransparent, Debug, Clone, PartialEq, Eq, Hash,
-)]
-pub struct TerminalEnvironmentValue(String);
-
-impl TerminalEnvironmentValue {
-    pub fn new(value: impl Into<String>) -> Self {
-        Self(value.into())
-    }
-
-    pub fn as_str(&self) -> &str {
-        &self.0
-    }
-}
-
-#[derive(Archive, RkyvSerialize, RkyvDeserialize, NotaRecord, Debug, Clone, PartialEq, Eq)]
-pub struct TerminalEnvironmentBinding {
-    pub name: TerminalEnvironmentName,
-    pub value: TerminalEnvironmentValue,
-}
-
-#[derive(
-    Archive, RkyvSerialize, RkyvDeserialize, NotaTransparent, Debug, Clone, PartialEq, Eq, Hash,
-)]
-pub struct TerminalWorkingDirectory(String);
-
-impl TerminalWorkingDirectory {
-    pub fn new(value: impl Into<String>) -> Self {
-        Self(value.into())
-    }
-
-    pub fn as_str(&self) -> &str {
-        &self.0
-    }
-}
-
-#[derive(Archive, RkyvSerialize, RkyvDeserialize, NotaRecord, Debug, Clone, PartialEq, Eq)]
-pub struct CreateSession {
-    pub name: TerminalName,
-    pub command: TerminalCommand,
-    pub environment: Vec<TerminalEnvironmentBinding>,
-    pub working_directory: Option<TerminalWorkingDirectory>,
-}
-
-#[derive(Archive, RkyvSerialize, RkyvDeserialize, NotaRecord, Debug, Clone, PartialEq, Eq)]
-pub struct RetireSession {
-    pub name: TerminalName,
-}
-
 #[derive(Archive, RkyvSerialize, RkyvDeserialize, NotaRecord, Debug, Clone, PartialEq, Eq)]
 pub struct ListSessions {}
 
 #[derive(Archive, RkyvSerialize, RkyvDeserialize, NotaRecord, Debug, Clone, PartialEq, Eq)]
 pub struct ResolveSession {
     pub name: TerminalName,
-}
-
-#[derive(Archive, RkyvSerialize, RkyvDeserialize, NotaRecord, Debug, Clone, PartialEq, Eq)]
-pub struct SessionCreated {
-    pub name: TerminalName,
-    pub data_socket_path: signal_persona::WirePath,
-}
-
-#[derive(Archive, RkyvSerialize, RkyvDeserialize, NotaRecord, Debug, Clone, PartialEq, Eq)]
-pub struct SessionRetired {
-    pub name: TerminalName,
-    pub exit_status: Option<TerminalExitStatus>,
 }
 
 #[derive(Archive, RkyvSerialize, RkyvDeserialize, NotaRecord, Debug, Clone, PartialEq, Eq)]
@@ -634,8 +522,6 @@ pub enum TerminalOperationKind {
     WriteInjection,
     SubscribeTerminalWorkerLifecycle,
     TerminalWorkerLifecycleRetraction,
-    CreateSession,
-    RetireSession,
     ListSessions,
     ResolveSession,
 }
@@ -1061,8 +947,6 @@ signal_channel! {
             Assert WriteInjection(WriteInjection),
             Subscribe SubscribeTerminalWorkerLifecycle(SubscribeTerminalWorkerLifecycle) opens TerminalWorkerLifecycleStream,
             Retract TerminalWorkerLifecycleRetraction(TerminalWorkerLifecycleToken),
-            Mutate CreateSession(CreateSession),
-            Retract RetireSession(RetireSession),
             Match ListSessions(ListSessions),
             Match ResolveSession(ResolveSession),
         }
@@ -1085,8 +969,6 @@ signal_channel! {
             InjectionRejected(InjectionRejected),
             TerminalWorkerLifecycleSnapshot(TerminalWorkerLifecycleSnapshot),
             SubscriptionRetracted(SubscriptionRetracted),
-            SessionCreated(SessionCreated),
-            SessionRetired(SessionRetired),
             SessionList(SessionList),
             SessionResolved(SessionResolved),
         }
@@ -1122,8 +1004,6 @@ impl TerminalRequest {
             Self::TerminalWorkerLifecycleRetraction(_) => {
                 TerminalOperationKind::TerminalWorkerLifecycleRetraction
             }
-            Self::CreateSession(_) => TerminalOperationKind::CreateSession,
-            Self::RetireSession(_) => TerminalOperationKind::RetireSession,
             Self::ListSessions(_) => TerminalOperationKind::ListSessions,
             Self::ResolveSession(_) => TerminalOperationKind::ResolveSession,
         }
@@ -1224,16 +1104,6 @@ impl From<SubscriptionRetracted> for TerminalReply {
         Self::SubscriptionRetracted(payload)
     }
 }
-impl From<SessionCreated> for TerminalReply {
-    fn from(payload: SessionCreated) -> Self {
-        Self::SessionCreated(payload)
-    }
-}
-impl From<SessionRetired> for TerminalReply {
-    fn from(payload: SessionRetired) -> Self {
-        Self::SessionRetired(payload)
-    }
-}
 impl From<SessionList> for TerminalReply {
     fn from(payload: SessionList) -> Self {
         Self::SessionList(payload)
@@ -1318,16 +1188,6 @@ impl From<SubscribeTerminalWorkerLifecycle> for TerminalRequest {
 impl From<TerminalWorkerLifecycleToken> for TerminalRequest {
     fn from(p: TerminalWorkerLifecycleToken) -> Self {
         Self::TerminalWorkerLifecycleRetraction(p)
-    }
-}
-impl From<CreateSession> for TerminalRequest {
-    fn from(payload: CreateSession) -> Self {
-        Self::CreateSession(payload)
-    }
-}
-impl From<RetireSession> for TerminalRequest {
-    fn from(payload: RetireSession) -> Self {
-        Self::RetireSession(payload)
     }
 }
 impl From<ListSessions> for TerminalRequest {

@@ -12,6 +12,9 @@ viewer-pump bytes live in `terminal-cell` / `persona-terminal`
 implementation code, not in Signal frames. Engine lifecycle/readiness
 traffic is the separate `signal-persona::SupervisionRequest` relation;
 do not call the component communication socket a supervision socket.
+Owner-only terminal session lifecycle commands live in the separate
+`owner-signal-persona-terminal` contract. This ordinary surface can
+read the session registry; it cannot create or retire sessions.
 
 There is one `signal_channel!` invocation in `src/lib.rs` declaring
 the `Terminal` channel. Terminal-owned introspection records (typed
@@ -75,12 +78,7 @@ Records local to this contract (see source for the full list):
   `TerminalReady`, `TerminalInputAccepted`, `TranscriptDelta`,
   `TerminalResized`, `TerminalCaptured`, `TerminalDetached`,
   `TerminalExited`, `TerminalRejected`.
-- Session registry: `TerminalCommandExecutable`,
-  `TerminalCommandArgument`, `TerminalCommand`,
-  `TerminalEnvironmentName`, `TerminalEnvironmentValue`,
-  `TerminalEnvironmentBinding`, `TerminalWorkingDirectory`,
-  `CreateSession`, `RetireSession`, `ListSessions`,
-  `ResolveSession`, `SessionCreated`, `SessionRetired`,
+- Session registry reads: `ListSessions`, `ResolveSession`,
   `SessionEntry`, `SessionList`, `SessionResolved`.
 - Introspection projections (in `src/introspection.rs`):
   `TerminalObservationSequence`, `TerminalSocketPath`,
@@ -104,8 +102,6 @@ TerminalRequest                          TerminalReply
 ├─ TerminalResize                        ├─ TerminalResized
 ├─ TerminalDetachment                    ├─ TerminalCaptured
 ├─ TerminalCapture                       ├─ TranscriptDelta
-├─ CreateSession                         ├─ SessionCreated
-├─ RetireSession                         ├─ SessionRetired
 ├─ ListSessions                          ├─ SessionList
 ├─ ResolveSession                        ├─ SessionResolved
 ├─ RegisterPromptPattern                 ├─ TerminalDetached
@@ -155,8 +151,6 @@ TerminalInput                      -> Assert
 TerminalResize                     -> Mutate
 TerminalDetachment                 -> Retract
 TerminalCapture                    -> Match
-CreateSession                      -> Mutate
-RetireSession                      -> Retract
 ListSessions                       -> Match
 ResolveSession                     -> Match
 RegisterPromptPattern              -> Assert
@@ -172,10 +166,9 @@ TerminalWorkerLifecycleRetraction  -> Retract     (closes TerminalWorkerLifecycl
 Terminal reads use `Match`; terminal-worker streams use `Subscribe`.
 Control operations that append new work or create leases use
 `Assert`. State changes to existing terminal geometry use `Mutate`;
-detach, unregister, and release requests use `Retract`.
-`CreateSession` is also `Mutate`: it is an authority order to install
-a named session in the terminal daemon registry. It is not an
-agent-authored fact about a session that already exists.
+detach, unregister, and release requests use `Retract`. Session
+lifecycle mutation is intentionally absent here; it belongs to
+`owner-signal-persona-terminal`.
 
 ### Skeleton honesty (Unimplemented event)
 
@@ -256,7 +249,7 @@ terminal boundary.
 |---|---|
 | Every request/reply travels as a Signal frame. | `tests/round_trip.rs` length-prefixed frame tests per variant. |
 | Every `TerminalRequest` variant declares a Signal root verb. | `signal-core` generates `TerminalRequest::signal_verb()`; round-trip tests assert each variant's expected root. |
-| Session creation is an authority mutation, not a fact assertion. | `CreateSession` is declared `Mutate`; `tests/round_trip.rs` asserts `SignalVerb::Mutate`. |
+| Session lifecycle mutation is owner-only, not part of the ordinary terminal contract. | Source scan: ordinary `TerminalRequest` has no `CreateSession` or `RetireSession`; those records live in `owner-signal-persona-terminal`. |
 | Session lookup is a read, not an implicit spawn. | `ListSessions` and `ResolveSession` are declared `Match`; they return typed session rows or typed rejection from the daemon. |
 | Subscription close uses **Path A**: request-side `Retract TerminalWorkerLifecycleRetraction` carrying the token, plus reply-side `SubscriptionRetracted` ack echoing the token. | The `signal_channel!` declaration names `Retract TerminalWorkerLifecycleRetraction(TerminalWorkerLifecycleToken)` and a `stream TerminalWorkerLifecycleStream { close TerminalWorkerLifecycleRetraction; … }` block. The kernel grammar (`signal-core::macros::validate`) rejects a `stream` block whose `close` is not a request-side `Retract` variant. Wire witnesses cover the retract request and the reply ack. |
 | Wire enums contain no `Unknown` variant. | Source scan: only `InjectionRejectionReason::{UnknownTerminal,UnknownLease}` carry the word "Unknown" and those are positive domain rejections (see next row). |
@@ -297,6 +290,8 @@ branch/bookmark once that lane is declared.
 - No OS focus policy. That is `persona-system`.
 - No terminal-cell daemon. That is `terminal-cell`, behind
   `persona-terminal`.
+- No owner-only terminal session lifecycle commands. Those are
+  `owner-signal-persona-terminal`.
 - No prompt interpretation or delivery policy. That belongs in the
   caller and transport owner, not this contract.
 - No raw PTY / viewer byte data plane.
@@ -324,6 +319,8 @@ tests/
   that enforces the request-side retract variant.
 - `signal-persona-harness/ARCHITECTURE.md` — sibling contract using
   the same Path A subscription discipline.
+- `owner-signal-persona-terminal/ARCHITECTURE.md` — owner-only
+  terminal session lifecycle mutation contract.
 - `signal-persona-system/ARCHITECTURE.md` and
   `signal-criome/ARCHITECTURE.md` — sibling contracts using the same
   Path A subscription discipline.
