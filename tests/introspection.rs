@@ -81,7 +81,7 @@ fn terminal_session_observation_typed_control_and_data_paths_round_trip_via_nota
     let encoded = encoder.into_string();
     assert_eq!(
         encoded,
-        "(TerminalSessionObservation operator \"/tmp/terminal/operator/control.sock\" \"/tmp/terminal/operator/data.sock\" 1 0 Ready)"
+        "(operator \"/tmp/terminal/operator/control.sock\" \"/tmp/terminal/operator/data.sock\" 1 0 Ready)"
     );
 
     let mut decoder = Decoder::new(&encoded);
@@ -183,6 +183,6 @@ fn terminal_introspection_snapshot_round_trips_through_nota_text() {
                 "session rotated",
             )],
         },
-        "(TerminalIntrospectionSnapshot [(TerminalSessionObservation operator \"/run/persona/engine/terminal.control.sock\" \"/run/persona/engine/terminal.data.sock\" 1 0 Ready)] [(TerminalDeliveryAttemptObservation 7 operator WriteInjection Started)] [] [] [(TerminalSessionHealthObservation operator Ready 2)] [(TerminalSessionArchiveObservation operator \"session rotated\" Archived)])",
+        "([(operator \"/run/persona/engine/terminal.control.sock\" \"/run/persona/engine/terminal.data.sock\" 1 0 Ready)] [(7 operator WriteInjection Started)] [] [] [(operator Ready 2)] [(operator \"session rotated\" Archived)])",
     );
 }

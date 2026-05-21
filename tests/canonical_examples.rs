@@ -69,14 +69,14 @@ fn canonical_request_examples_round_trip() {
         TerminalRequest::TerminalConnection(TerminalConnection {
             terminal: operator(),
         }),
-        "(TerminalConnection operator)",
+        "(TerminalConnection (operator))",
     );
     round_trip(
         TerminalRequest::TerminalInput(TerminalInput {
             terminal: operator(),
             bytes: hello_bytes(),
         }),
-        "(TerminalInput operator [104 101 108 108 111])",
+        "(TerminalInput (operator [104 101 108 108 111]))",
     );
     round_trip(
         TerminalRequest::TerminalResize(TerminalResize {
@@ -84,24 +84,24 @@ fn canonical_request_examples_round_trip() {
             rows: TerminalRows::new(24),
             columns: TerminalColumns::new(80),
         }),
-        "(TerminalResize operator 24 80)",
+        "(TerminalResize (operator 24 80))",
     );
     round_trip(
         TerminalRequest::TerminalDetachment(TerminalDetachment {
             terminal: operator(),
             reason: TerminalDetachmentReason::HumanRequested,
         }),
-        "(TerminalDetachment operator HumanRequested)",
+        "(TerminalDetachment (operator HumanRequested))",
     );
     round_trip(
         TerminalRequest::TerminalCapture(TerminalCapture {
             terminal: operator(),
         }),
-        "(TerminalCapture operator)",
+        "(TerminalCapture (operator))",
     );
     round_trip(
         TerminalRequest::ResolveSession(ResolveSession { name: operator() }),
-        "(ResolveSession operator)",
+        "(ResolveSession (operator))",
     );
     round_trip(
         TerminalRequest::AcquireInputGate(AcquireInputGate {
@@ -109,14 +109,14 @@ fn canonical_request_examples_round_trip() {
             reason: InputGateReason::new("send router-delivered command"),
             prompt_pattern_id: None,
         }),
-        "(AcquireInputGate operator \"send router-delivered command\" None)",
+        "(AcquireInputGate (operator \"send router-delivered command\" None))",
     );
     round_trip(
         TerminalRequest::ReleaseInputGate(ReleaseInputGate {
             terminal: operator(),
             lease: lease(),
         }),
-        "(ReleaseInputGate operator (InputGateLease 42))",
+        "(ReleaseInputGate (operator (42)))",
     );
     round_trip(
         TerminalRequest::WriteInjection(WriteInjection {
@@ -124,17 +124,17 @@ fn canonical_request_examples_round_trip() {
             lease: lease(),
             bytes: hello_bytes(),
         }),
-        "(WriteInjection operator (InputGateLease 42) [104 101 108 108 111])",
+        "(WriteInjection (operator (42) [104 101 108 108 111]))",
     );
     round_trip(
         TerminalRequest::SubscribeTerminalWorkerLifecycle(SubscribeTerminalWorkerLifecycle {
             terminal: operator(),
         }),
-        "(SubscribeTerminalWorkerLifecycle operator)",
+        "(SubscribeTerminalWorkerLifecycle (operator))",
     );
     round_trip(
         TerminalRequest::TerminalWorkerLifecycleRetraction(token()),
-        "(TerminalWorkerLifecycleToken operator)",
+        "(TerminalWorkerLifecycleRetraction (operator))",
     );
 }
 
@@ -145,14 +145,14 @@ fn canonical_reply_examples_round_trip() {
             terminal: operator(),
             generation: TerminalGeneration::new(1),
         }),
-        "(TerminalReady operator 1)",
+        "(TerminalReady (operator 1))",
     );
     round_trip(
         TerminalReply::TerminalInputAccepted(TerminalInputAccepted {
             terminal: operator(),
             generation: TerminalGeneration::new(1),
         }),
-        "(TerminalInputAccepted operator 1)",
+        "(TerminalInputAccepted (operator 1))",
     );
     round_trip(
         TerminalReply::GateAcquired(GateAcquired {
@@ -160,14 +160,14 @@ fn canonical_reply_examples_round_trip() {
             lease: lease(),
             prompt_state: PromptState::Clean,
         }),
-        "(GateAcquired operator (InputGateLease 42) (Clean))",
+        "(GateAcquired (operator (42) (Clean)))",
     );
     round_trip(
         TerminalReply::GateBusy(GateBusy {
             terminal: operator(),
             current_holder: InputGateLeaseId::new(41),
         }),
-        "(GateBusy operator 41)",
+        "(GateBusy (operator 41))",
     );
     round_trip(
         TerminalReply::InjectionAck(InjectionAck {
@@ -175,24 +175,24 @@ fn canonical_reply_examples_round_trip() {
             generation: TerminalGeneration::new(1),
             sequence: TerminalSequence::new(7),
         }),
-        "(InjectionAck operator 1 7)",
+        "(InjectionAck (operator 1 7))",
     );
     round_trip(
         TerminalReply::InjectionRejected(InjectionRejected {
             terminal: operator(),
             reason: InjectionRejectionReason::UnknownTerminal,
         }),
-        "(InjectionRejected operator UnknownTerminal)",
+        "(InjectionRejected (operator UnknownTerminal))",
     );
     round_trip(
         TerminalReply::SubscriptionRetracted(SubscriptionRetracted { token: token() }),
-        "(SubscriptionRetracted (TerminalWorkerLifecycleToken operator))",
+        "(SubscriptionRetracted ((operator)))",
     );
     round_trip(
         TerminalReply::SessionResolved(SessionResolved {
             name: operator(),
             data_socket_path: data_socket_path(),
         }),
-        "(SessionResolved operator \"/run/persona/terminal/sessions/operator/data.sock\")",
+        "(SessionResolved (operator \"/run/persona/terminal/sessions/operator/data.sock\"))",
     );
 }

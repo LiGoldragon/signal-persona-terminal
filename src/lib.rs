@@ -290,8 +290,8 @@ impl NotaDecode for PromptPattern {
                 decoder.expect_record_end()?;
                 Ok(Self::RegexSuffix { pattern })
             }
-            other => Err(nota_codec::Error::UnknownKindForVerb {
-                verb: "PromptPattern",
+            other => Err(nota_codec::Error::UnknownVariant {
+                enum_name: "PromptPattern",
                 got: other.to_string(),
             }),
         }
@@ -430,8 +430,8 @@ impl NotaDecode for PromptState {
                 decoder.expect_record_end()?;
                 Ok(Self::Dirty { trailing_count })
             }
-            other => Err(nota_codec::Error::UnknownKindForVerb {
-                verb: "PromptState",
+            other => Err(nota_codec::Error::UnknownVariant {
+                enum_name: "PromptState",
                 got: other.to_string(),
             }),
         }
@@ -686,8 +686,8 @@ impl NotaDecode for TerminalWorkerStopReason {
                 decoder.expect_record_end()?;
                 Ok(Self::AttachConnectionFailed(reason))
             }
-            other => Err(nota_codec::Error::UnknownKindForVerb {
-                verb: "TerminalWorkerStopReason",
+            other => Err(nota_codec::Error::UnknownVariant {
+                enum_name: "TerminalWorkerStopReason",
                 got: other.to_string(),
             }),
         }
@@ -738,8 +738,8 @@ impl NotaDecode for TerminalWorkerLifecycle {
                 decoder.expect_record_end()?;
                 Ok(Self::Stopped { worker, reason })
             }
-            other => Err(nota_codec::Error::UnknownKindForVerb {
-                verb: "TerminalWorkerLifecycle",
+            other => Err(nota_codec::Error::UnknownVariant {
+                enum_name: "TerminalWorkerLifecycle",
                 got: other.to_string(),
             }),
         }
@@ -891,8 +891,8 @@ impl NotaDecode for TerminalExitStatus {
                 decoder.expect_record_end()?;
                 Ok(Self::StatusUnavailable)
             }
-            other => Err(nota_codec::Error::UnknownKindForVerb {
-                verb: "TerminalExitStatus",
+            other => Err(nota_codec::Error::UnknownVariant {
+                enum_name: "TerminalExitStatus",
                 got: other.to_string(),
             }),
         }

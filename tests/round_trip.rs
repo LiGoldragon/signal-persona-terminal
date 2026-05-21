@@ -212,7 +212,7 @@ fn prompt_pattern_registration_request_round_trips_through_nota_text() {
             terminal: terminal(),
             pattern: PromptPattern::LiteralSuffix(PromptPatternBytes::new(b"> ".to_vec())),
         }),
-        "(RegisterPromptPattern operator (LiteralSuffix [62 32]))",
+        "(RegisterPromptPattern (operator (LiteralSuffix [62 32])))",
     );
 }
 
@@ -250,7 +250,7 @@ fn acquire_input_gate_request_round_trips_through_nota_text() {
             reason: InputGateReason::new("message delivery"),
             prompt_pattern_id: Some(prompt_pattern_id()),
         }),
-        "(AcquireInputGate operator \"message delivery\" codex-ready)",
+        "(AcquireInputGate (operator \"message delivery\" (Some codex-ready)))",
     );
 }
 
@@ -641,7 +641,7 @@ fn gate_acquired_event_round_trips_through_nota_text() {
             lease: input_gate_lease(),
             prompt_state: PromptState::Clean,
         }),
-        "(GateAcquired operator (InputGateLease 42) (Clean))",
+        "(GateAcquired (operator (42) (Clean)))",
     );
 }
 
@@ -733,7 +733,7 @@ fn worker_lifecycle_snapshot_round_trips_through_nota_text() {
                 },
             ],
         }),
-        "(TerminalWorkerLifecycleSnapshot operator [(Started InputWriter) (Stopped OutputReader (OutputReaderFinished))])",
+        "(TerminalWorkerLifecycleSnapshot (operator [(Started InputWriter) (Stopped OutputReader (OutputReaderFinished))]))",
     );
 }
 
