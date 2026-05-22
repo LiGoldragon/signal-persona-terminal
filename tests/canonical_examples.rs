@@ -109,7 +109,7 @@ fn canonical_request_examples_round_trip() {
             reason: InputGateReason::new("send router-delivered command"),
             prompt_pattern_id: None,
         }),
-        "(AcquireInputGate (operator \"send router-delivered command\" None))",
+        "(AcquireInputGate (operator [send router-delivered command] None))",
     );
     round_trip(
         TerminalRequest::ReleaseInputGate(ReleaseInputGate {
@@ -193,6 +193,6 @@ fn canonical_reply_examples_round_trip() {
             name: operator(),
             data_socket_path: data_socket_path(),
         }),
-        "(SessionResolved (operator \"/run/persona/terminal/sessions/operator/data.sock\"))",
+        "(SessionResolved (operator [/run/persona/terminal/sessions/operator/data.sock]))",
     );
 }

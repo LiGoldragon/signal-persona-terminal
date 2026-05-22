@@ -250,7 +250,7 @@ fn acquire_input_gate_request_round_trips_through_nota_text() {
             reason: InputGateReason::new("message delivery"),
             prompt_pattern_id: Some(prompt_pattern_id()),
         }),
-        "(AcquireInputGate (operator \"message delivery\" (Some codex-ready)))",
+        "(AcquireInputGate (operator [message delivery] (Some codex-ready)))",
     );
 }
 
