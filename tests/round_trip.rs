@@ -818,7 +818,7 @@ fn terminal_contract_names_persona_terminal_as_the_production_endpoint() {
 fn terminal_daemon_configuration_round_trips_through_nota_text() {
     use nota_codec::{Decoder, Encoder, NotaDecode, NotaEncode};
     use signal_persona::{SocketMode, WirePath};
-    use signal_persona_auth::{OwnerIdentity, UnixUserId};
+    use signal_persona_origin::{OwnerIdentity, UnixUserId};
     use signal_persona_terminal::TerminalDaemonConfiguration;
 
     let configuration = TerminalDaemonConfiguration {
@@ -846,7 +846,7 @@ fn terminal_daemon_configuration_round_trips_through_nota_text() {
 fn terminal_daemon_configuration_round_trips_through_rkyv() {
     use nota_config::ConfigurationRecord;
     use signal_persona::{SocketMode, WirePath};
-    use signal_persona_auth::{OwnerIdentity, UnixUserId};
+    use signal_persona_origin::{OwnerIdentity, UnixUserId};
     use signal_persona_terminal::TerminalDaemonConfiguration;
 
     let configuration = TerminalDaemonConfiguration {

@@ -1231,7 +1231,7 @@ pub struct TerminalDaemonConfiguration {
     /// Path to the terminal supervisor's redb store file.
     pub store_path: signal_persona::WirePath,
     /// The engine owner identity passed to the terminal supervisor.
-    pub owner_identity: signal_persona_auth::OwnerIdentity,
+    pub owner_identity: signal_persona_origin::OwnerIdentity,
 }
 
 nota_config::impl_rkyv_configuration!(TerminalDaemonConfiguration);
