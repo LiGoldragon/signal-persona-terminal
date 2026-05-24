@@ -2,7 +2,7 @@
 //!
 //! Read this file as the public interface of the terminal control plane. The
 //! harness requests terminal connection, input, resize, detachment, and
-//! capture. Persona-terminal owns prompt-pattern registration, input-gate
+//! capture. Terminal owns prompt-pattern registration, input-gate
 //! leases, programmatic injection, and worker lifecycle observation at the
 //! Persona boundary, even when it implements those facts with terminal-cell
 //! primitives underneath.
@@ -1203,17 +1203,17 @@ impl From<ResolveSession> for TerminalRequest {
 
 // ─── Daemon configuration ──────────────────────────────────
 //
-// Typed startup configuration for `persona-terminal-supervisor`.
+// Typed startup configuration for `terminal-supervisor`.
 // The persona manager writes one of these (NOTA or rkyv) to a
 // state-dir path and passes that path as argv. The supervisor
 // decodes through `nota_config::ConfigurationSource::from_argv()?
 // .decode()?` and runs with the resulting record. No environment
 // variables on the production launch path.
 
-/// Startup configuration for `persona-terminal-supervisor`.
+/// Startup configuration for `terminal-supervisor`.
 ///
 /// Replaces the previous `--socket`, `--store`,
-/// `PERSONA_SOCKET_PATH`, `PERSONA_TERMINAL_STORE`,
+/// `PERSONA_SOCKET_PATH`, `TERMINAL_STORE`,
 /// `PERSONA_STATE_PATH`, `PERSONA_SOCKET_MODE`,
 /// `PERSONA_SUPERVISION_SOCKET_PATH`, and
 /// `PERSONA_SUPERVISION_SOCKET_MODE` argv/environment-variable

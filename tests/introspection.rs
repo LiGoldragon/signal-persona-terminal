@@ -1,6 +1,6 @@
 use nota_codec::{Decoder, Encoder, NotaDecode, NotaEncode};
 use rkyv::{Archive, Deserialize as RkyvDeserialize, Serialize as RkyvSerialize};
-use signal_persona_terminal::{
+use signal_terminal::{
     TerminalDeliveryAttemptObservation, TerminalDeliveryAttemptState, TerminalEventObservation,
     TerminalGeneration, TerminalInputAccepted, TerminalIntrospectionSnapshot, TerminalName,
     TerminalObservationSequence, TerminalOperationKind, TerminalReply,

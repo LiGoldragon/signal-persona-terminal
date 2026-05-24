@@ -1,19 +1,19 @@
-# signal-persona-terminal — architecture
+# signal-terminal — architecture
 
 *Signal contract for Persona terminal transport control.*
 
 ## 0 · TL;DR
 
-`signal-persona-terminal` is the typed communication contract
+`signal-terminal` is the typed communication contract
 `persona-harness` (and router delivery adapters) use to ask
-`persona-terminal` for terminal work. The raw attached-viewer byte
+`terminal` for terminal work. The raw attached-viewer byte
 plane stays outside this contract: PTY bytes, socket bytes, and
-viewer-pump bytes live in `terminal-cell` / `persona-terminal`
+viewer-pump bytes live in `terminal-cell` / `terminal`
 implementation code, not in Signal frames. Engine lifecycle/readiness
 traffic is the separate `signal-persona::SupervisionRequest` relation;
 do not call the component communication socket a supervision socket.
 Owner-only terminal session lifecycle commands live in the separate
-`owner-signal-persona-terminal` contract. This ordinary surface can
+`owner-signal-terminal` contract. This ordinary surface can
 read the session registry; it cannot create or retire sessions.
 
 ## MUST IMPLEMENT — three-layer migration
@@ -45,14 +45,14 @@ groups, each needing a contract-local verb:
 Drop redundant `Terminal*` prefixes throughout — crate namespace
 supplies it.
 
-**Mandatory `Tap`/`Untap` for persona components.** Persona-terminal
+**Mandatory `Tap`/`Untap` for persona components.** Terminal
 is a persona component, so its observable surface is standardized.
 Add a mandatory `observable { … }` block; the macro injects
 `Tap(ObserverFilter)` / `Untap(TerminalObserverSubscriptionToken)`
 verbs for the standardized observer hook. The domain-specific
 `Watch`/`Unwatch` for worker lifecycle coexists without collision.
 
-**Layer 2 — Component Commands (persona-terminal daemon).** The
+**Layer 2 — Component Commands (terminal daemon).** The
 terminal daemon owns its typed Command enum (e.g.
 `TerminalCommand::AssertConnection`,
 `TerminalCommand::DeliverInput`,
@@ -97,15 +97,15 @@ the per-stream token; the terminal responds with
 | Side | Component |
 |---|---|
 | Request side | Persona components that need terminal transport (today: `persona-harness` and router delivery adapters). |
-| Reply / event side | `persona-terminal` |
+| Reply / event side | `terminal` |
 
 Two control surfaces share the channel:
 
 - **Harness transport**: `persona-harness` requests connection,
-  input, resize, detachment, and capture vectors. `persona-terminal`
+  input, resize, detachment, and capture vectors. `terminal`
   emits readiness, input acceptance, transcript, resize, detachment,
   capture, exit, and rejection events.
-- **Terminal control**: `persona-terminal` owns prompt-pattern
+- **Terminal control**: `terminal` owns prompt-pattern
   registry, input-gate leases, write-injection acknowledgements, and
   worker-lifecycle observations. It may implement those facts on top
   of `terminal-cell` primitives, but `terminal-cell` is not the
@@ -194,7 +194,7 @@ Closed enums; typed rejection reasons; no string-tagged event kinds.
 ```mermaid
 sequenceDiagram
     participant Caller as caller
-    participant Terminal as persona-terminal
+    participant Terminal as terminal
 
     Caller->>Terminal: SubscribeTerminalWorkerLifecycle(target)
     Terminal-->>Caller: TerminalWorkerLifecycleSnapshot{...}
@@ -235,7 +235,7 @@ Untap (mandatory observability)    -> Retract
 The wire form carries the contract-local verb only; the Sema class
 label is computed at observation publish time inside the daemon.
 Session lifecycle mutation is intentionally absent here; it belongs
-to `owner-signal-persona-terminal`.
+to `owner-signal-terminal`.
 
 ### Skeleton honesty (Unimplemented event)
 
@@ -252,7 +252,7 @@ TerminalRequestUnimplemented
 ```
 
 When a `TerminalRequest` variant has no built behavior yet,
-`persona-terminal` emits `TerminalRequestUnimplemented` rather than
+`terminal` emits `TerminalRequestUnimplemented` rather than
 panicking or producing a generic rejection.
 
 ### Injection ordering
@@ -289,17 +289,17 @@ Worker-lifecycle records expose transport task start/stop
 observations as typed events.
 
 This contract does not decide whether a write should happen. It only
-carries the transport control facts needed by `persona-terminal` and
+carries the transport control facts needed by `terminal` and
 its consumers.
 
 ## 5 · Introspection records
 
 Terminal durable Sema rows that need to be inspectable outside
-`persona-terminal` have typed record shapes in this contract. The
+`terminal` have typed record shapes in this contract. The
 component still owns its redb file, table declarations, reducers,
 consistency model, and redaction policy. `persona-introspect` asks
 the running component for these records; it does not open
-`persona-terminal`'s database directly.
+`terminal`'s database directly.
 
 `TerminalIntrospectionSnapshot` is the prototype projection bundle
 over: terminal session observations; delivery attempt observations;
@@ -316,7 +316,7 @@ terminal boundary.
 |---|---|
 | Every request/reply travels as a Signal frame. | `tests/round_trip.rs` length-prefixed frame tests per variant. |
 | Every `TerminalRequest` variant is a contract-local verb in verb form. | Round-trip tests assert each variant's NOTA head. Sema classification is daemon-side projection only. |
-| Session lifecycle mutation is owner-only, not part of the ordinary terminal contract. | Source scan: ordinary `TerminalRequest` has no `CreateSession` or `RetireSession`; those records live in `owner-signal-persona-terminal`. |
+| Session lifecycle mutation is owner-only, not part of the ordinary terminal contract. | Source scan: ordinary `TerminalRequest` has no `CreateSession` or `RetireSession`; those records live in `owner-signal-terminal`. |
 | Session lookup is a read; its Component Command projects to Sema `Match`. | `ListSessions` and `ResolveSession` return typed session rows or typed rejection from the daemon. |
 | Subscription close uses **Path A**: request-side `Retract TerminalWorkerLifecycleRetraction` carrying the token, plus reply-side `SubscriptionRetracted` ack echoing the token. | The `signal_channel!` declaration names `Retract TerminalWorkerLifecycleRetraction(TerminalWorkerLifecycleToken)` and a `stream TerminalWorkerLifecycleStream { close TerminalWorkerLifecycleRetraction; … }` block. The kernel grammar (`signal-frame::macros::validate`) rejects a `stream` block whose `close` is not a request-side `Retract` variant. Wire witnesses cover the retract request and the reply ack. |
 | Wire enums contain no `Unknown` variant. | Source scan: only `InjectionRejectionReason::{UnknownTerminal,UnknownLease}` carry the word "Unknown" and those are positive domain rejections (see next row). |
@@ -343,7 +343,7 @@ round-trip tests carry the payload heads.
 
 `signal_frame::Frame` carries the protocol version. Schema-level
 changes are breaking; coordinate `persona-harness`,
-`persona-terminal`, and terminal-cell transport on the upgrade.
+`terminal`, and terminal-cell transport on the upgrade.
 
 This crate depends on `signal-frame` via a named-branch reference, not
 a raw revision pin. The destination is a stable `signal-frame` API
@@ -351,14 +351,14 @@ branch/bookmark once that lane is declared.
 
 ## 9 · Non-ownership
 
-- No terminal daemon. That is `persona-terminal`.
+- No terminal daemon. That is `terminal`.
 - No harness actor. That is `persona-harness`.
 - No router delivery policy. That is `persona-router`.
 - No OS focus policy. That is `persona-system`.
 - No terminal-cell daemon. That is `terminal-cell`, behind
-  `persona-terminal`.
+  `terminal`.
 - No owner-only terminal session lifecycle commands. Those are
-  `owner-signal-persona-terminal`.
+  `owner-signal-terminal`.
 - No prompt interpretation or delivery policy. That belongs in the
   caller and transport owner, not this contract.
 - No raw PTY / viewer byte data plane.
@@ -387,12 +387,12 @@ tests/
 - `~/primary/skills/component-triad.md` §"Verbs come in three layers".
 - `signal-persona-harness/ARCHITECTURE.md` — sibling contract using
   the same Path A subscription discipline.
-- `owner-signal-persona-terminal/ARCHITECTURE.md` — owner-only
+- `owner-signal-terminal/ARCHITECTURE.md` — owner-only
   terminal session lifecycle mutation contract.
 - `signal-persona-system/ARCHITECTURE.md` and
   `signal-criome/ARCHITECTURE.md` — sibling contracts using the same
   Path A subscription discipline.
 - `persona-harness/ARCHITECTURE.md`
-- `persona-terminal/ARCHITECTURE.md`
+- `terminal/ARCHITECTURE.md`
 - `persona-router/ARCHITECTURE.md`
 - `terminal-cell/ARCHITECTURE.md`

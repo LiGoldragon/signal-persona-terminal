@@ -1,4 +1,4 @@
-;; Canonical NOTA examples for signal-persona-terminal.
+;; Canonical NOTA examples for signal-terminal.
 ;;
 ;; One example per request variant, reply variant, and stream event
 ;; variant. The text-form head is the contract variant name and the

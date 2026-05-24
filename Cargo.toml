@@ -1,15 +1,15 @@
 [package]
-name         = "signal-persona-terminal"
+name         = "signal-terminal"
 version      = "0.1.0"
 edition      = "2024"
 rust-version = "1.85"
 license      = "MIT OR Apache-2.0"
-repository   = "https://github.com/LiGoldragon/signal-persona-terminal"
+repository   = "https://github.com/LiGoldragon/signal-terminal"
 description  = "Signal contract - persona-harness to terminal transport channel."
 publish      = false
 
 [lib]
-name = "signal_persona_terminal"
+name = "signal_terminal"
 path = "src/lib.rs"
 
 [dependencies]

@@ -7,7 +7,7 @@
 //! round-trip witnesses already live in `tests/round_trip.rs`.
 
 use nota_codec::{Decoder, Encoder, NotaDecode, NotaEncode};
-use signal_persona_terminal::{
+use signal_terminal::{
     AcquireInputGate, GateAcquired, GateBusy, InjectionAck, InjectionRejected,
     InjectionRejectionReason, InputGateLease, InputGateLeaseIdentifier, InputGateReason,
     PromptState, ReleaseInputGate, ResolveSession, SessionResolved,

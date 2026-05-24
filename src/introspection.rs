@@ -1,6 +1,6 @@
 //! Terminal-owned introspection record vocabulary.
 //!
-//! These records describe inspectable terminal state. `persona-terminal`
+//! These records describe inspectable terminal state. `terminal`
 //! remains the database and reducer owner; this module owns only the typed
 //! shape that `persona-introspect` and other observers can name.
 

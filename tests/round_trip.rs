@@ -3,7 +3,7 @@ use signal_core::{
     ExchangeIdentifier, ExchangeLane, LaneSequence, NonEmpty, Reply, RequestPayload, SessionEpoch,
     SignalVerb, StreamEventIdentifier, SubReply, SubscriptionTokenInner,
 };
-use signal_persona_terminal::{
+use signal_terminal::{
     AcquireInputGate, GateAcquired, GateBusy, GateReleased, InjectionAck, InjectionRejected,
     InjectionRejectionReason, InputGateLease, InputGateLeaseIdentifier, InputGateReason,
     ListPromptPatterns, ListSessions, PromptPattern, PromptPatternBytes, PromptPatternEntry,
@@ -805,10 +805,10 @@ fn from_impl_lifts_injection_ack_into_reply() {
 }
 
 #[test]
-fn terminal_contract_names_persona_terminal_as_the_production_endpoint() {
+fn terminal_contract_names_terminal_as_the_production_endpoint() {
     let source = include_str!("../src/lib.rs");
 
-    assert!(source.contains("Persona-terminal owns prompt-pattern registration"));
+    assert!(source.contains("Terminal owns prompt-pattern registration"));
     assert!(source.contains("terminal-cell"));
     assert!(!source.contains("terminal-cell's control plane"));
     assert!(!source.contains("terminal-cell integration callers"));
@@ -819,7 +819,7 @@ fn terminal_daemon_configuration_round_trips_through_nota_text() {
     use nota_codec::{Decoder, Encoder, NotaDecode, NotaEncode};
     use signal_persona::{SocketMode, WirePath};
     use signal_persona_origin::{OwnerIdentity, UnixUserIdentifier};
-    use signal_persona_terminal::TerminalDaemonConfiguration;
+    use signal_terminal::TerminalDaemonConfiguration;
 
     let configuration = TerminalDaemonConfiguration {
         terminal_socket_path: WirePath::new("/run/persona/X/terminal.sock"),
@@ -847,7 +847,7 @@ fn terminal_daemon_configuration_round_trips_through_rkyv() {
     use nota_config::ConfigurationRecord;
     use signal_persona::{SocketMode, WirePath};
     use signal_persona_origin::{OwnerIdentity, UnixUserIdentifier};
-    use signal_persona_terminal::TerminalDaemonConfiguration;
+    use signal_terminal::TerminalDaemonConfiguration;
 
     let configuration = TerminalDaemonConfiguration {
         terminal_socket_path: WirePath::new("/run/persona/X/terminal.sock"),

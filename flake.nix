@@ -1,5 +1,5 @@
 {
-  description = "signal-persona-terminal - Signal contract for persona-harness to terminal transport";
+  description = "signal-terminal - Signal contract for persona-harness to terminal transport";
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
@@ -65,7 +65,7 @@
           });
         };
         devShells.default = pkgs.mkShell {
-          name = "signal-persona-terminal";
+          name = "signal-terminal";
           packages = [ pkgs.jujutsu pkgs.pkg-config toolchain ];
         };
       });

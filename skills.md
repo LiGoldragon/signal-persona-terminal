@@ -1,4 +1,4 @@
-# skills — signal-persona-terminal
+# skills — signal-terminal
 
 *Per-repo agent guide for the terminal transport control contract.*
 
@@ -17,22 +17,22 @@ Before changing code in this repo, read:
 - `~/primary/skills/nix-discipline.md`
 - this repo's `ARCHITECTURE.md`
 - the consumers' `ARCHITECTURE.md` files
-  (`persona-harness/`, `persona-terminal/`, `terminal-cell/`).
+  (`persona-harness/`, `terminal/`, `terminal-cell/`).
 
 ---
 
 ## What this repo is for
 
-`signal-persona-terminal` is the typed control-plane contract
+`signal-terminal` is the typed control-plane contract
 `persona-harness` and router delivery adapters use to ask
-`persona-terminal` for terminal work. The raw attached-viewer byte
+`terminal` for terminal work. The raw attached-viewer byte
 plane stays outside this contract: PTY bytes, socket bytes, and
-viewer-pump bytes live in `terminal-cell` / `persona-terminal`
+viewer-pump bytes live in `terminal-cell` / `terminal`
 implementation code, not in Signal frames.
 
 This is the ordinary terminal communication surface. It can query the
 session registry, but it cannot create or retire sessions. Owner-only
-session lifecycle mutation is declared in `owner-signal-persona-terminal`.
+session lifecycle mutation is declared in `owner-signal-terminal`.
 
 The terminal-worker-lifecycle subscription follows the canonical
 lifecycle in `~/primary/skills/subscription-lifecycle.md`: open with
@@ -74,14 +74,14 @@ ack echoing the token.
 - Router delivery policy.
 - Socket paths, reconnects, or process supervision.
 - Runtime database access, reducers, or consistency policy for
-  introspection. `persona-terminal` owns those; this contract owns
+  introspection. `terminal` owns those; this contract owns
   only the typed observation vocabulary.
 - Owner-only session lifecycle commands (`CreateSession`,
   `RetireSession`, and their replies). Those belong to
-  `owner-signal-persona-terminal`.
+  `owner-signal-terminal`.
 
 `terminal-cell` is the low-level PTY primitive behind
-`persona-terminal`; do not describe it as an independent production
+`terminal`; do not describe it as an independent production
 Signal endpoint.
 
 ---
@@ -115,7 +115,7 @@ Signal endpoint.
 - **Session lifecycle mutation is owner-only.** Do not add
   `CreateSession`, `RetireSession`, or equivalent lifecycle mutation
   variants to the ordinary `TerminalRequest`; use
-  `owner-signal-persona-terminal`.
+  `owner-signal-terminal`.
 - **No runtime code.** No Kameo, Tokio, socket, redb, or daemon
   glue in this crate.
 - **Round trips cover every variant.** rkyv length-prefixed frame
